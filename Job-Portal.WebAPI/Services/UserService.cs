@@ -8,12 +8,13 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Job_Portal.WebAPI.Models;
 
 namespace Job_Portal.WebAPI.Services
 {
     public interface IUserService
     {
-        User Authenticate(string username, string password);
+        UserDetails Authenticate(string username, string password);
         IEnumerable<User> GetAll();
         User GetById(int id);
     }
@@ -23,8 +24,9 @@ namespace Job_Portal.WebAPI.Services
         // users hardcoded for simplicity, store in a db with hashed passwords in production applications
         private List<User> _users = new List<User>
         {
-            new User { Id = 1, FirstName = "Admin", LastName = "User", Username = "admin", Password = "admin", Role = Role.Admin },
-            new User { Id = 2, FirstName = "Normal", LastName = "User", Username = "user", Password = "user", Role = Role.User }
+            new User { Id = 1, FirstName = "Admin", LastName = "User", Username = "admin@gmail.com", Password = "password@123", Role = Role.Admin },
+            new User { Id = 2, FirstName = "Employer", LastName = "User", Username = "employer@gmail.com", Password = "password@123", Role = Role.Employer },
+            new User { Id = 2, FirstName = "Employee", LastName = "User", Username = "employee@gmail.com", Password = "password@123", Role = Role.Employee }
         };
 
         private readonly AppSettings _appSettings;
@@ -34,7 +36,7 @@ namespace Job_Portal.WebAPI.Services
             _appSettings = appSettings.Value;
         }
 
-        public User Authenticate(string username, string password)
+        public UserDetails Authenticate(string username, string password)
         {
             var user = _users.SingleOrDefault(x => x.Username == username && x.Password == password);
 
@@ -58,18 +60,27 @@ namespace Job_Portal.WebAPI.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
             user.Token = tokenHandler.WriteToken(token);
 
-            return user.WithoutPassword();
+            UserDetails objUserDetails = new UserDetails()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Username = user.Username,
+                Token = user.Token,
+                Role = user.Role
+            };
+            return objUserDetails;
         }
 
         public IEnumerable<User> GetAll()
         {
-            return _users.WithoutPasswords();
+            return _users;
         }
 
         public User GetById(int id)
         {
             var user = _users.FirstOrDefault(x => x.Id == id);
-            return user.WithoutPassword();
+            return user;
         }
     }
 }
