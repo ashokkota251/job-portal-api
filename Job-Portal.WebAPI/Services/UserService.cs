@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Job_Portal.WebAPI.Models;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Job_Portal.WebAPI.Services
 {
@@ -21,13 +22,6 @@ namespace Job_Portal.WebAPI.Services
 
     public class UserService : IUserService
     {
-        // users hardcoded for simplicity, store in a db with hashed passwords in production applications
-        private List<User> _users = new List<User>
-        {
-            new User { Id = 1, FirstName = "Admin", LastName = "User", Username = "admin@gmail.com", Password = "password@123", Role = Role.Admin },
-            new User { Id = 2, FirstName = "Employer", LastName = "User", Username = "employer@gmail.com", Password = "password@123", Role = Role.Employer },
-            new User { Id = 2, FirstName = "Employee", LastName = "User", Username = "employee@gmail.com", Password = "password@123", Role = Role.Employee }
-        };
 
         private readonly AppSettings _appSettings;
 
@@ -38,7 +32,9 @@ namespace Job_Portal.WebAPI.Services
 
         public UserDetails Authenticate(string username, string password)
         {
-            var user = _users.SingleOrDefault(x => x.Username == username && x.Password == password);
+            zab_dataContext _context = new zab_dataContext();
+            List<UserLogin> _users = _context.UserLogin.ToList();
+            var user = _users.SingleOrDefault(x => x.UserName == username && x.Password == password);
 
             // return null if user not found
             if (user == null)
@@ -51,22 +47,20 @@ namespace Job_Portal.WebAPI.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.UserId.ToString()),
                     new Claim(ClaimTypes.Role, user.Role)
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            user.Token = tokenHandler.WriteToken(token);
+            var Token = tokenHandler.WriteToken(token);
 
             UserDetails objUserDetails = new UserDetails()
             {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Username = user.Username,
-                Token = user.Token,
+                Id = user.UserId,
+                Username = user.UserName,
+                Token = Token,
                 Role = user.Role
             };
             return objUserDetails;
@@ -74,13 +68,12 @@ namespace Job_Portal.WebAPI.Services
 
         public IEnumerable<User> GetAll()
         {
-            return _users;
+            return null;
         }
 
         public User GetById(int id)
         {
-            var user = _users.FirstOrDefault(x => x.Id == id);
-            return user;
+            return null;
         }
     }
 }

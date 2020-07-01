@@ -33,6 +33,7 @@ namespace Job_Portal.WebAPI
             services.AddCors();
             services.AddControllers();
             services.AddSingleton<IUserService, UserService>();
+            services.AddSingleton<IRegistartionService, RegistartionService>();
 
             services.AddSwaggerGen(options =>
             {
